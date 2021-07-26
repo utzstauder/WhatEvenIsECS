@@ -16,7 +16,8 @@ public class RotationSystem : SystemBase
             {
                 rotation.Value = math.mul(rotation.Value, quaternion.RotateY(deltaTime * math.radians(rotationSpeed.Value)));
             }
-        ).ScheduleParallel();
+            ).WithName("Rotation_NoPlayer")
+            .ScheduleParallel();
 
 
         float horizontalInput = UnityEngine.Input.GetAxis("Horizontal");
@@ -27,6 +28,7 @@ public class RotationSystem : SystemBase
             {
                 rotation.Value = math.mul(rotation.Value, quaternion.RotateY(horizontalInput * deltaTime * math.radians(rotationSpeed.Value)));
             }
-        ).ScheduleParallel();
+            ).WithName("Rotation_Player")
+            .Schedule();
     }
 }

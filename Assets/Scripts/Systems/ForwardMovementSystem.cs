@@ -9,14 +9,14 @@ public class ForwardMovementSystem : SystemBase
     {
         float deltaTime = Time.DeltaTime;
 
-
         Entities
             .WithNone<PlayerControlledTag>()
             .ForEach((ref Translation translation, ref Rotation rotation, in MovementSpeedData moveSpeed) =>
             {
                 translation.Value += moveSpeed.Value * deltaTime * math.forward(rotation.Value);
             }
-        ).ScheduleParallel();
+            ).WithName("Movement_NoPlayer")
+            .ScheduleParallel();
 
 
         float forwardInput = UnityEngine.Input.GetAxis("Vertical");
@@ -28,6 +28,7 @@ public class ForwardMovementSystem : SystemBase
 
                 translation.Value += forwardInput * moveSpeed.Value * deltaTime * math.forward(rotation.Value);
             }
-        ).ScheduleParallel();
+            ).WithName("Movement_Player")
+            .Schedule();
     }
 }
