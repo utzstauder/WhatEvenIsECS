@@ -1,5 +1,4 @@
 ﻿using Unity.Entities;
-using Unity.Jobs;
 using Unity.Transforms;
 using Unity.Mathematics;
 
@@ -20,16 +19,19 @@ public class DestructionSystem : SystemBase
     {
         var ecb = ecbSystem.CreateCommandBuffer().ToConcurrent();
 
-        var playerEntityArray = GetEntityQuery(typeof(PlayerControlledTag), typeof(Translation)).ToComponentDataArray<Translation>(Unity.Collections.Allocator.TempJob);
+        var playerEntityArray = GetEntityQuery(
+            typeof(PlayerControlledTag),
+            typeof(Translation)
+            ).ToComponentDataArray<Translation>(Unity.Collections.Allocator.TempJob);
 
         Entities
             .WithNone<PlayerControlledTag>()
             .WithDeallocateOnJobCompletion(playerEntityArray)
-            .ForEach((Entity entity, int entityInQueryIndex, ref Translation translationOther) =>
+            .ForEach((Entity entity, int entityInQueryIndex, ref Translation translation) =>
             {
                 for (int i = 0; i < playerEntityArray.Length; i++)
                 {
-                    if (math.distance(playerEntityArray[i].Value, translationOther.Value) <= collisionDistance)
+                    if (math.distance(playerEntityArray[i].Value, translation.Value) <= collisionDistance)
                     {
                         ecb.DestroyEntity(entityInQueryIndex, entity);
                     }
