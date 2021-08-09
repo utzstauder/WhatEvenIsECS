@@ -17,12 +17,14 @@ public class CubeSpawner : MonoBehaviour
         var settings = GameObjectConversionSettings.FromWorld(World.DefaultGameObjectInjectionWorld, null);
         var entity = GameObjectConversionUtility.ConvertGameObjectHierarchy(Prefab, settings);
 
+        System.Random random = new System.Random(1);
+
         for (int i = 0; i < NumberOfObjects; i++)
         {
             Vector3 position = new Vector3(
-                    Random.Range(-Area.x, Area.x),
-                    Random.Range(-Area.y, Area.y),
-                    Random.Range(-Area.z, Area.z)
+                    (float)(random.NextDouble() * Area.x * 2 - Area.x),
+                    (float)(random.NextDouble() * Area.y * 2 - Area.y),
+                    (float)(random.NextDouble() * Area.z * 2 - Area.z)
                 );
 
             var entityInstance = entityManager.Instantiate(entity);

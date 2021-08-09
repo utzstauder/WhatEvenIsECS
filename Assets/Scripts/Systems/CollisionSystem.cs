@@ -1,8 +1,9 @@
 ﻿using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
+using Unity.Collections;
 
-public class DestructionSystem : SystemBase
+public class CollisionSystem : SystemBase
 {
     private const float collisionDistance = 2f;
 
@@ -17,23 +18,33 @@ public class DestructionSystem : SystemBase
 
     protected override void OnUpdate()
     {
+        var randomArray = World.GetExistingSystem<RandomSystem>().RandomArray;
+
         var ecb = ecbSystem.CreateCommandBuffer().ToConcurrent();
 
         var playerEntityArray = GetEntityQuery(
             typeof(PlayerControlledTag),
             typeof(Translation)
-            ).ToComponentDataArray<Translation>(Unity.Collections.Allocator.TempJob);
+            ).ToComponentDataArray<Translation>(Allocator.TempJob);
 
         Entities
             .WithNone<PlayerControlledTag>()
             .WithDeallocateOnJobCompletion(playerEntityArray)
-            .ForEach((Entity entity, int entityInQueryIndex, ref Translation translation) =>
+            .WithNativeDisableParallelForRestriction(randomArray)
+            .ForEach((Entity entity, int entityInQueryIndex, int nativeThreadIndex, ref Translation translation, ref UpSpeedData upSpeed) =>
             {
                 for (int i = 0; i < playerEntityArray.Length; i++)
                 {
                     if (math.distance(playerEntityArray[i].Value, translation.Value) <= collisionDistance)
                     {
-                        ecb.DestroyEntity(entityInQueryIndex, entity);
+                        //ecb.DestroyEntity(entityInQueryIndex, entity);
+
+                        // assign random value to UpSpeedData component
+                        var random = randomArray[nativeThreadIndex];
+
+                        upSpeed.Value = random.NextFloat();
+
+                        randomArray[nativeThreadIndex] = random;
                     }
                 }
 
