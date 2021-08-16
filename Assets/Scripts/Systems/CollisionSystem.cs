@@ -22,20 +22,20 @@ public class CollisionSystem : SystemBase
 
         var ecb = ecbSystem.CreateCommandBuffer().ToConcurrent();
 
-        var playerEntityArray = GetEntityQuery(
+        var playerPositionArray = GetEntityQuery(
             typeof(PlayerControlledTag),
             typeof(Translation)
             ).ToComponentDataArray<Translation>(Allocator.TempJob);
 
         Entities
             .WithNone<PlayerControlledTag>()
-            .WithDeallocateOnJobCompletion(playerEntityArray)
+            .WithDeallocateOnJobCompletion(playerPositionArray)
             .WithNativeDisableParallelForRestriction(randomArray)
             .ForEach((Entity entity, int entityInQueryIndex, int nativeThreadIndex, ref Translation translation, ref UpSpeedData upSpeed) =>
             {
-                for (int i = 0; i < playerEntityArray.Length; i++)
+                for (int i = 0; i < playerPositionArray.Length; i++)
                 {
-                    if (math.distance(playerEntityArray[i].Value, translation.Value) <= collisionDistance)
+                    if (math.distance(playerPositionArray[i].Value, translation.Value) <= collisionDistance)
                     {
                         //ecb.DestroyEntity(entityInQueryIndex, entity);
 

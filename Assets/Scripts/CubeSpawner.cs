@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using Unity.Entities;
 using Unity.Transforms;
+using Unity.Physics;
 
 public class CubeSpawner : MonoBehaviour
 {
@@ -10,12 +11,20 @@ public class CubeSpawner : MonoBehaviour
 
     EntityManager entityManager;
 
+    public BlobAssetStore BlobAssetStore { get; private set; }
+
+    private void Awake()
+    {
+        BlobAssetStore = new BlobAssetStore();
+    }
+
     void Start()
     {
         entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
-        var settings = GameObjectConversionSettings.FromWorld(World.DefaultGameObjectInjectionWorld, null);
+        var settings = GameObjectConversionSettings.FromWorld(World.DefaultGameObjectInjectionWorld, BlobAssetStore);
         var entity = GameObjectConversionUtility.ConvertGameObjectHierarchy(Prefab, settings);
+
 
         System.Random random = new System.Random(1);
 
@@ -29,7 +38,18 @@ public class CubeSpawner : MonoBehaviour
 
             var entityInstance = entityManager.Instantiate(entity);
 
-            entityManager.SetComponentData(entityInstance, new Translation { Value = position });
+            entityManager.SetComponentData(entityInstance, new Translation { Value = (position + transform.position) });
         }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireCube(transform.position, Area);
+    }
+
+    private void OnDestroy()
+    {
+        if (BlobAssetStore != null) BlobAssetStore.Dispose();
     }
 }
