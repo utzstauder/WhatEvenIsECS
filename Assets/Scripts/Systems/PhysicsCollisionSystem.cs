@@ -1,20 +1,14 @@
 ﻿using Unity.Entities;
-using Unity.Transforms;
-using Unity.Collections;
 using Unity.Physics;
 using Unity.Physics.Systems;
-using Unity.Jobs;
-using UnityEngine;
 
-[UpdateBefore(typeof(EndFramePhysicsSystem))]
-[UpdateAfter(typeof(StepPhysicsWorld))]
+[UpdateAfter(typeof(EndFramePhysicsSystem))]
 public class PhysicsCollisionSystem : SystemBase
 {
-    private const float collisionDistance = 2f;
-
     private EndSimulationEntityCommandBufferSystem ecbSystem;
 
     private BuildPhysicsWorld buildPhysicsWorld;
+    private ISimulation simulation;
 
     protected override void OnCreate()
     {
@@ -27,51 +21,36 @@ public class PhysicsCollisionSystem : SystemBase
 
     protected override void OnUpdate()
     {
-        var collisionWorld = buildPhysicsWorld.PhysicsWorld.CollisionWorld;
+        simulation = World.GetOrCreateSystem<StepPhysicsWorld>().Simulation;
 
-        Dependency = JobHandle.CombineDependencies(Dependency, buildPhysicsWorld.FinalJobHandle);
+        Entities.ForEach((DynamicBuffer<CollisionBuffer> collisionBuffer) => collisionBuffer.Clear()).Run();
 
-        var ecb = ecbSystem.CreateCommandBuffer().ToConcurrent();
+        var collisionJob = new CollisionJob { Collisions = GetBufferFromEntity<CollisionBuffer>() };
 
-        var playerPositionArray = GetEntityQuery(
-            typeof(PlayerControlledTag),
-            typeof(Translation)
-            ).ToComponentDataArray<Translation>(Allocator.TempJob);
+        var collisionHandle = collisionJob.Schedule(simulation, ref buildPhysicsWorld.PhysicsWorld, Dependency);
+        
+        collisionHandle.Complete();
+    }
 
+    private struct CollisionJob : ICollisionEventsJob
+    {
+        public BufferFromEntity<CollisionBuffer> Collisions;
+        public void Execute(CollisionEvent collisionEvent)
+        {
+            Entity entityA = collisionEvent.Entities.EntityA;
+            Entity entityB = collisionEvent.Entities.EntityB;
 
-
-        Entities
-            .WithNone<PlayerControlledTag>()
-            .WithDeallocateOnJobCompletion(playerPositionArray)
-            .WithReadOnly(collisionWorld)
-            .ForEach((Entity entity, int entityInQueryIndex, int nativeThreadIndex, in Translation translation) =>
+            JobLogger.Log("Collision");
+            
+            if (Collisions.Exists(entityA))
             {
-                for (int i = 0; i < playerPositionArray.Length; i++)
-                {
-                    PointDistanceInput input = new PointDistanceInput {
-                        Position = translation.Value,
-                        MaxDistance = collisionDistance
-                    };
-
-                    NativeList<DistanceHit> allHits = new NativeList<DistanceHit>();
-
-                    if (collisionWorld.CalculateDistance(input, ref allHits))
-                    {
-                        JobLogger.Log($"Hits = {allHits.Capacity}");
-                        for (int h = 0; h < allHits.Capacity; h++)
-                        {
-                            if (HasComponent<PlayerControlledTag>(allHits[h].Entity))
-                            {
-                                ecb.DestroyEntity(entityInQueryIndex, entity);
-                            }
-                        }
-
-                    }
-                }
+                Collisions[entityA].Add(new CollisionBuffer {Entity = entityB});
             }
-            ).WithName("PhysicsCollisionSystem_CheckForCollisionWithPlayer")
-            .ScheduleParallel();
 
-        ecbSystem.AddJobHandleForProducer(this.Dependency);
+            if (Collisions.Exists(entityB))
+            {
+                Collisions[entityB].Add(new CollisionBuffer {Entity = entityA});
+            }
+        }
     }
 }

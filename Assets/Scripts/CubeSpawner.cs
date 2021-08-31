@@ -2,6 +2,7 @@
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Physics;
+using Unity.Physics.Authoring;
 
 public class CubeSpawner : MonoBehaviour
 {
@@ -23,8 +24,8 @@ public class CubeSpawner : MonoBehaviour
         entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
         var settings = GameObjectConversionSettings.FromWorld(World.DefaultGameObjectInjectionWorld, BlobAssetStore);
-        var entity = GameObjectConversionUtility.ConvertGameObjectHierarchy(Prefab, settings);
 
+        var entity = GameObjectConversionUtility.ConvertGameObjectHierarchy(Prefab, settings);
 
         System.Random random = new System.Random(1);
 
@@ -39,6 +40,8 @@ public class CubeSpawner : MonoBehaviour
             var entityInstance = entityManager.Instantiate(entity);
 
             entityManager.SetComponentData(entityInstance, new Translation { Value = (position + transform.position) });
+
+            entityManager.AddBuffer<CollisionBuffer>(entityInstance);
         }
     }
 
