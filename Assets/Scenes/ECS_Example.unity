@@ -596,7 +596,7 @@ MonoBehaviour:
       m_Value: 0101010101010101010101010101010101010101010101010101010101010101
     m_RaisesCollisionEvents:
       m_Override: 0
-      m_Value: 1
+      m_Value: 0
     m_CustomTags:
       m_Override: 0
       m_Value: 0000000000000000
@@ -836,8 +836,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Prefab: {fileID: 3903148653696316404, guid: 04720aed020029b42b6316ff328fc88b, type: 3}
-  NumberOfObjects: 30
-  Area: {x: 20, y: 10, z: 20}
+  NumberOfObjects: 3000
+  Area: {x: 20, y: 20, z: 20}
 --- !u!4 &1965613763
 Transform:
   m_ObjectHideFlags: 0

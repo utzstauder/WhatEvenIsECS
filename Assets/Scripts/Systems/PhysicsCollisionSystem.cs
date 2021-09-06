@@ -39,8 +39,6 @@ public class PhysicsCollisionSystem : SystemBase
         {
             Entity entityA = collisionEvent.Entities.EntityA;
             Entity entityB = collisionEvent.Entities.EntityB;
-
-            JobLogger.Log("Collision");
             
             if (Collisions.Exists(entityA))
             {

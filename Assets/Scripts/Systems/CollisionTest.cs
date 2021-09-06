@@ -23,9 +23,13 @@ public class CollisionTest : SystemBase
             .WithNone<PlayerControlledTag>()
             .ForEach((Entity entity, int entityInQueryIndex, DynamicBuffer<CollisionBuffer> collisionBuffer) =>
             {
-                if (collisionBuffer.Length > 0)
+                for (int i = 0; i < collisionBuffer.Length; i++)
                 {
-                    ecb.DestroyEntity(entityInQueryIndex, entity);
+                    if (collisionBuffer[i].Entity.CompareTo(entity) == 0) continue;
+                    if (HasComponent<PlayerControlledTag>(collisionBuffer[i].Entity))
+                    {
+                        ecb.DestroyEntity(entityInQueryIndex, entity);
+                    }
                 }
             }
             ).WithName("CollisionTest_DestroyOnCollision")
